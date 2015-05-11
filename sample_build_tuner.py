@@ -14,7 +14,9 @@ from opentuner import IntegerParameter
 from opentuner import MeasurementInterface
 from opentuner import Result
 
-import skill_list
+import sampletree
+
+from sampletree import sampletree
 
 class TestTuner(MeasurementInterface):
 
@@ -23,11 +25,9 @@ class TestTuner(MeasurementInterface):
     Define the search space by creating a
     ConfigurationManipulator
     """
-    print self.args.level
-
     manipulator = ConfigurationManipulator()
 
-    skill_list.add_skills(manipulator)
+    sampletree.addParams(manipulator)
     
     return manipulator
 
@@ -37,17 +37,21 @@ class TestTuner(MeasurementInterface):
     """
     cfg = desired_result.configuration.data
 
+    level = self.args.level
+
+#    print level
+    
 #   Should return 0 if OK. Returns a higher number the more invalid the setup is.
 #   For example, 4 if it has 4 unsatisfied requirements, and 7 if it has 7 unsatisfied
 #   requirements.
-    valid_status = skill_list.check_validity(cfg)
-    
-    if valid_status != 0:
-      return Result(time = valid_status)
+    valid_status = sampletree.evalRequirements(cfg, level)
 
-    res = skill_list.calc_results(cfg)
+    if valid_status != 0:
+      return Result(time = valid_status, state = 'ERROR')
+
+    res = sampletree.evalTree(cfg)
     
-    return Result(time = -total_dmg) 
+    return Result(time = -res) 
 
   def save_final_config(self, configuration):
     """called at the end of tuning"""
@@ -62,5 +66,4 @@ if __name__ == '__main__':
   #TODO: Ver se isso fica aqui
   argparser.add_argument('--level', type=int, default=5,
                          help='Level to optimze')
-  #TODO: Generate
   TestTuner.main(argparser.parse_args())
