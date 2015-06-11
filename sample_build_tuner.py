@@ -16,8 +16,6 @@ from opentuner import Result
 
 import sampletree
 
-from sampletree import sampletree
-
 class TestTuner(MeasurementInterface):
 
   def manipulator(self):
@@ -27,7 +25,11 @@ class TestTuner(MeasurementInterface):
     """
     manipulator = ConfigurationManipulator()
 
-    sampletree.addParams(manipulator)
+    builder = sampletree.treeBuilder()
+
+    self.tree = builder.build(self.args.level)
+    
+    self.tree.addParams(manipulator)
     
     return manipulator
 
@@ -44,12 +46,12 @@ class TestTuner(MeasurementInterface):
 #   Should return 0 if OK. Returns a higher number the more invalid the setup is.
 #   For example, 4 if it has 4 unsatisfied requirements, and 7 if it has 7 unsatisfied
 #   requirements.
-    valid_status = sampletree.evalRequirements(cfg, level)
+    valid_status = self.tree.evalRequirements(cfg, level)
 
     if valid_status != 0:
       return Result(time = valid_status, state = 'ERROR')
 
-    res = sampletree.evalTree(cfg)
+    res = self.tree.evalTree(cfg)
     
     return Result(time = -res) 
 
